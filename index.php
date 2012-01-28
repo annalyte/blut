@@ -1,7 +1,7 @@
 <?php
 
 $version = '0.1';
-$build = 'xxxxxx';
+$build = '7bcc7a';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -50,11 +50,14 @@ if(!$db_selected) {
 		font-size: 10pt;
 	}
 	
+	table {		
+		border: 1px solid black;
+	}
 	
 </style>
 </head>
 <div id="wrap">
-<h1><a href="http://blut.aaronbauer.org/">Blutdruck</a></h1>
+<h1><a href="index.php">Blutdruck</a></h1>
 <?php 
 # Erster Schritt: Name
 if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['page']=='') {
@@ -92,6 +95,22 @@ echo 'Hallo '.$_GET['name'].'!';
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
     echo '<p>Du hast zu letzt am <b>'.$data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
+    
+    $history_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
+    $history_read = mysql_query($history_query) or die (mysql_error());
+    
+    echo '<table><tr><td>Dia</td><td>Sys</td><td>Zeit</td></tr>';
+    while ($row = mysql_fetch_assoc($history_read)) {
+    echo '<tr>';	
+    echo '<td>'.$row["dia"].'</td>';
+    echo '<td>'.$row["sys"].'</td>';
+    echo '<td>'.date("H:i - d.m.Y",strtotime($row["timestamp"])).'</td>';
+	echo '</tr>';
+    }
+    
+    echo '</tr></table>';
+ 
+    
     
 	echo '<p>Wie ist dein Blutdruck heute?</p>';	
 	echo '<form action="index.php" method="post">
@@ -142,6 +161,7 @@ if($_GET['page']=='statistics') {
        
     echo '<p>Standardfehler: '.$se.'<br /></p>';
     echo '<p>95% Konfidenzintervall: ['.$ci_low.'; '.$ci_high.']</p>';
+   
 }
 
 ?>
