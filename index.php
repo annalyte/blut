@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.2';
-$build = 'afb998';
+$version = '0.3';
+$build = '9444cd';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -14,7 +14,6 @@ if(!$link) {
 // Auswählen der Datenbank
 $db_selected = mysql_select_db('d0131787', $link);
 
-
 if(!$db_selected) {
     die ('Kann Datenbank nicht nutzen: ' .mysql_error());
 };
@@ -23,9 +22,8 @@ if(!$db_selected) {
 <html>
 <head>
 <title>Blutdruck</title>
-
+<meta name="format-detection" content="telephone=no">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-
 <meta name="apple-mobile-web-app-capable" content="yes" /> 
 <meta name="viewport" content="width = device-width, user-scalable=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -35,6 +33,11 @@ if(!$db_selected) {
 	body {
 		font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 		font-weight: lighter;
+		background: url(snow.png) repeat;
+	}
+	
+	hr {
+		border: 1px dashed black;
 	}
 	
 	#wrap {
@@ -61,11 +64,19 @@ if(!$db_selected) {
 		padding: 10px;
 	}
 	
+	a:link { font-weight:bold; color:#000; text-decoration:underline; -webkit-transition: 2s linear; }
+a:visited { font-weight:bold; color:#000; text-decoration:none; }
+a:focus { font-weight:bold; color:#000; text-decoration:underline; }
+a:hover { font-weight:bold; color:#000; text-decoration:none;}
+a:active { font-weight:bold; color:#000; text-decoration:underline; }
+	
 </style>
 </head>
+<body>
 <div id="wrap">
 <h1><a href="index.php">Blutdruck</a></h1>
-<?php 
+<?php
+
 # Erster Schritt: Name
 if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['page']=='') {
 
@@ -76,7 +87,7 @@ if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['pag
     
     echo 'Hallo. Zuletzt gemessen hat hier <b>'.$data['name'].'</b> am '.$data['timestamp'].'.';
     
-	echo '<h2>1. Wer bist du?</h2>';
+	echo '<h2>1. Sag mir wer du bist</h2>';
 	echo '<p>Sag mir wer du bist, damit ich alles richtig eintragen kann</p>';
 	echo '<form action="index.php" method="get">
 <select name="name">
@@ -92,17 +103,21 @@ if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['pag
     
     
 }
+
 # Zweiter Schritt: Blutdruck
 if($_GET['name']!='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['page']=='') {
 
-echo '<h2>2. Deine Messung.</h2>';
+echo '<h2>2. Miss deinen Blutdruck</h2>';
 echo 'Hallo '.$_GET['name'].'!';
 
-	$read_query = 'SELECT AVG(dia), AVG(sys) FROM blut WHERE name="'.$_GET['name'].'"';
+	$read_query = 'SELECT AVG(dia), AVG(sys) FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC'; // Holt die Durchschnitte, kann aber den Zeitstempel nicht holen
+	$timestamp_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC'; // Holt den Zeitstempel noch extra
+	$exec_timestamp = mysql_query($timestamp_query) or die(mysql_error());
+	$timestamp_data = mysql_fetch_array($exec_timestamp) or die (mysql_error());
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
     
-    echo '<p>Du hast zu letzt am <b>'.$data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
+    echo '<p>Du hast zuletzt am <b>'.$timestamp_data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
     echo '<p>Dein durchschnittlicher Blutdruck liegt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
     
     $history_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
@@ -120,29 +135,31 @@ echo 'Hallo '.$_GET['name'].'!';
     echo '</tr></table>';
  
     
-    
+    echo '<h2>3. Trage deine Messwerte hier ein</h2>';
 	echo '<p>Wie ist dein Blutdruck heute?</p>';	
 	echo '<form action="index.php" method="post">
 <input type="text" size="3" maxlenght="3" name="sys" /> Sys in mm Hg <br />
 <input type="text" size="3" maxlenght="3" name="dia" /> Dia in mm Hg <br />
 <input type="hidden" name="name" value="'.$_GET['name'].'" />
-	<p><b>Hast du auch wirklich alles richtig eingegeben? Wenn ja, dann drücke auf <i>"weiter"</i>.</b></p> <br />
+	<p><strong>Hast du auch wirklich alles richtig eingegeben? Wenn ja, dann drücke auf <i>"weiter"</i>.</strong></p> <br />
+<input type="button" class="button" value="Zurück" onClick="history.back()">
 <input type="submit" value="Weiter" class="button" />
 </form>';
 }
+
 # Dritter Schritt: Fertig. Name und Blutdruck anzeigen.
 if ($_POST['name']!='' and $_POST['dia']!='' and $_POST['sys']!='' and $_GET['page']=='') {
-	echo '<h2>Danki!</h2>';
-	echo 'Vielen Dank '.$_POST['name'].'! Dein Blutdruck ist '.$_POST['sys'].'/'.$_POST['dia'];
-	echo ' <b>Du kannst die App jetzt beenden.</b>';
+	echo '<h2>4. Danki!</h2>';
+	echo '<p>Vielen Dank '.$_POST['name'].'! Dein Blutdruck ist '.$_POST['sys'].'/'.$_POST['dia'].'</p>';
+	echo ' <p><b>Du kannst die App jetzt beenden.</b></p>';
 	
 	$write_query = 'INSERT INTO blut (sys, dia, name) VALUES ('.$_POST['sys'].', "'.$_POST['dia'].'", "'.$_POST['name'].'");';
 	$exec_write = mysql_query($write_query) or die(mysql_error());
     echo ' Alles paletti!';
-    
-    
-
+ 
 }
+
+
 
 if($_GET['page']=='info') {
 	$read_query = 'SELECT AVG(dia), AVG(sys) FROM blut';
@@ -178,7 +195,7 @@ if($_GET['page']=='statistics') {
     
     echo '<p>Anzahl der Messwerte: '.$data['COUNT(*)'].'</p>';
        
-    echo '<h2>Diatolisch</h2>'; 
+    echo '<hr /><h2>Diatolisch</h2>'; 
     
     echo '<p>Die fünf höchsten Messwerte:</p>';
     echo '<table><tr><td>Dia</td><td>Name</td><td>Zeit</td></tr>';
@@ -196,7 +213,7 @@ if($_GET['page']=='statistics') {
     echo '<p>Standardfehler: '.$se_dia.' (Dia in mm Hg)<br /></p>';
     echo '<p>95% Konfidenzintervall: ['.$ci_dia_low.'; '.$ci_dia_high.'] (Dia in mm Hg)</p>';
     
-    echo '<h2>Systolisch</h2>';
+    echo '<hr /><h2>Systolisch</h2>';
  
     echo '<p>Die fünf höchsten Messwerte:</p>';
     echo '<table><tr><td>Sys</td><td>Name</td><td>Zeit</td></tr>';
@@ -217,10 +234,12 @@ if($_GET['page']=='statistics') {
 }
 
 ?>
+<hr />
 <p><a href="?page=info">Hier</a> erfährst du mehr über deinen Blutdruck.</p>
 <p><a href="?page=statistics">Statistik</a></p>
 <p><?php echo $versioning; ?></p>
 </div>
+</body>
 </html>
 
 <?php mysql_close($link); ?>
