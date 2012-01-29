@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.1';
-$build = '7bcc7a';
+$version = '0.2';
+$build = 'afb998';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -38,7 +38,7 @@ if(!$db_selected) {
 	}
 	
 	#wrap {
-		width:500px;
+		width:480px;
 		margin-left: auto;
 		margin-right: auto;
 	}
@@ -51,7 +51,14 @@ if(!$db_selected) {
 	}
 	
 	table {		
-		border: 1px solid black;
+		border: 1pt solid black;
+		text-align: center;
+		padding: 3px;
+	}
+	
+	td {
+		border: 1pt solid grey;
+		padding: 10px;
 	}
 	
 </style>
@@ -91,10 +98,12 @@ if($_GET['name']!='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['page
 echo '<h2>2. Deine Messung.</h2>';
 echo 'Hallo '.$_GET['name'].'!';
 
-	$read_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
+	$read_query = 'SELECT AVG(dia), AVG(sys) FROM blut WHERE name="'.$_GET['name'].'"';
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
+    
     echo '<p>Du hast zu letzt am <b>'.$data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
+    echo '<p>Dein durchschnittlicher Blutdruck liegt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
     
     $history_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
     $history_read = mysql_query($history_query) or die (mysql_error());
@@ -148,19 +157,62 @@ if($_GET['page']=='statistics') {
 	$read_query = 'SELECT STDDEV(dia), AVG(dia), STDDEV(sys), AVG(sys), COUNT(*) FROM blut';
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
-    echo '<p>Standardabweichung (Dia in mm Hg): '.$data['STDDEV(dia)'].'</p>';
-    echo '<p>Standardabweichung (Sys in mm Hg): '.$data['STDDEV(sys)'].'</p>';
-    echo '<p>Durchschnitt (Dia in mm Hg): '.$data['AVG(dia)'].'</p>';
-    echo '<p>Durchschnitt (Sys in mm Hg): '.$data['AVG(sys)'].'</p>';
     
-    $se = $data['STDDEV(dia)']/sqrt($data['COUNT(*)']);
-    $ci_high = $data['AVG(dia)']+1.96*$se;
-    $ci_low = $data['AVG(dia)']-1.96*$se;
+    $toplist_dia_query = 'SELECT * FROM blut ORDER BY dia DESC LIMIT 5';
+    $exec_toplist_dia = mysql_query($toplist_dia_query) or die (mysql_error());
     
-    $ci_mean = ($ci_high+$ci_low)/2;
+    $toplist_sys_query = 'SELECT * FROM blut ORDER BY sys DESC LIMIT 5';
+    $exec_toplist_sys = mysql_query($toplist_sys_query) or die (mysql_error());
+        
+    $se_dia = $data['STDDEV(dia)']/sqrt($data['COUNT(*)']);
+    $ci_dia_high = $data['AVG(dia)']+1.96*$se_dia;
+    $ci_dia_low = $data['AVG(dia)']-1.96*$se_dia;
+    
+    $ci_dia_mean = ($ci_dia_high+$ci_dia_low)/2;
+    
+    $se_sys = $data['STDDEV(sys)']/sqrt($data['COUNT(*)']);
+    $ci_sys_high = $data['AVG(sys)']+1.96*$se_sys;
+    $ci_sys_low = $data['AVG(sys)']-1.96*$se_sys;
+    
+    $ci_sys_mean = ($ci_sys_high+$ci_sys_low)/2;
+    
+    echo '<p>Anzahl der Messwerte: '.$data['COUNT(*)'].'</p>';
        
-    echo '<p>Standardfehler: '.$se.'<br /></p>';
-    echo '<p>95% Konfidenzintervall: ['.$ci_low.'; '.$ci_high.']</p>';
+    echo '<h2>Diatolisch</h2>'; 
+    
+    echo '<p>Die fünf höchsten Messwerte:</p>';
+    echo '<table><tr><td>Dia</td><td>Name</td><td>Zeit</td></tr>';
+    while ($row_dia = mysql_fetch_assoc($exec_toplist_dia)) {
+    echo '<tr>';	
+    echo '<td>'.$row_dia["dia"].'</td>';
+    echo '<td>'.$row_dia["name"].'</td>';
+    echo '<td>'.date("H:i - d.m.Y",strtotime($row_dia["timestamp"])).'</td>';
+	echo '</tr>';
+    }    
+    echo '</tr></table>';
+    
+    echo '<p>Durchschnitt (Dia in mm Hg): '.$data['AVG(dia)'].'</p>'; 
+    echo '<p>Standardabweichung (Dia in mm Hg): '.$data['STDDEV(dia)'].'</p>'; 
+    echo '<p>Standardfehler: '.$se_dia.' (Dia in mm Hg)<br /></p>';
+    echo '<p>95% Konfidenzintervall: ['.$ci_dia_low.'; '.$ci_dia_high.'] (Dia in mm Hg)</p>';
+    
+    echo '<h2>Systolisch</h2>';
+ 
+    echo '<p>Die fünf höchsten Messwerte:</p>';
+    echo '<table><tr><td>Sys</td><td>Name</td><td>Zeit</td></tr>';
+    while ($row_sys = mysql_fetch_assoc($exec_toplist_sys)) {
+    echo '<tr>';	
+    echo '<td>'.$row_sys["sys"].'</td>';
+    echo '<td>'.$row_sys["name"].'</td>';
+    echo '<td>'.date("H:i - d.m.Y",strtotime($row_sys["timestamp"])).'</td>';
+	echo '</tr>';
+    }    
+    echo '</tr></table>';
+    
+    echo '<p>Durchschnitt (Sys in mm Hg): '.$data['AVG(sys)'].'</p>';
+    echo '<p>Standardabweichung (Sys in mm Hg): '.$data['STDDEV(sys)'].'</p>';
+    echo '<p>Standardfehler: '.$se_sys.' (Sys in mm Hg)<br /></p>';
+    echo '<p>95% Konfidenzintervall: ['.$ci_sys_low.'; '.$ci_sys_high.'] (Sys in mm Hg)</p>';
    
 }
 
