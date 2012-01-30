@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.3';
-$build = '9444cd';
+$version = '0.4';
+$build = '44fbbe';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -28,6 +28,41 @@ if(!$db_selected) {
 <meta name="viewport" content="width = device-width, user-scalable=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="apple-touch-icon" href="http://blut.aaronbauer.org/apple-touch-icon.png"/>
+<!-- Verhindert das Links unter iOS in Mobile Safari geöffnet werden -->
+<script>(function(a,b,c){if(c in b&&b[c]){var d,e=a.location,f=/^(a|html)$/i;a.addEventListener("click",function(a){d=a.target;while(!f.test(d.nodeName))d=d.parentNode;"href"in d&&(d.href.indexOf("http")||~d.href.indexOf(e.host))&&(a.preventDefault(),e.href=d.href)},!1)}})(document,window.navigator,"standalone")</script>
+<?php  
+	if ($_GET['name']!='') {
+	$graph_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id ASC';
+	$graph_result = mysql_query($graph_query) or die (mysql_error());
+	}
+?>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Zeit');
+        data.addColumn('number', 'Dia in mm Hg');
+        data.addColumn('number', 'Sys in mm Hg');
+        data.addRows([
+        <?php if ($_GET['name']!='') {
+        while ($graph = mysql_fetch_assoc($graph_result)) {
+    echo '["'.$graph['timestamp'].'", '.$graph['dia'].', '.$graph['sys'].'],';	
+    } 
+    }?>
+          
+        ]);
+
+        var options = {
+          width: 500, height: 250,
+          title: 'Blutdruck'
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
 
 <style type="text/css">
 	body {
@@ -99,8 +134,7 @@ if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['pag
  
 <input type="submit" value="Weiter" class="button" />
 </form>';
-
-    
+   
     
 }
 
@@ -120,6 +154,8 @@ echo 'Hallo '.$_GET['name'].'!';
     echo '<p>Du hast zuletzt am <b>'.$timestamp_data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
     echo '<p>Dein durchschnittlicher Blutdruck liegt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
     
+    echo '<p><div id="chart_div"></div></p>'; 
+    
     $history_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
     $history_read = mysql_query($history_query) or die (mysql_error());
     
@@ -132,7 +168,7 @@ echo 'Hallo '.$_GET['name'].'!';
 	echo '</tr>';
     }
     
-    echo '</tr></table>';
+    echo '</table>';
  
     
     echo '<h2>3. Trage deine Messwerte hier ein</h2>';
@@ -206,7 +242,7 @@ if($_GET['page']=='statistics') {
     echo '<td>'.date("H:i - d.m.Y",strtotime($row_dia["timestamp"])).'</td>';
 	echo '</tr>';
     }    
-    echo '</tr></table>';
+    echo '</table>';
     
     echo '<p>Durchschnitt (Dia in mm Hg): '.$data['AVG(dia)'].'</p>'; 
     echo '<p>Standardabweichung (Dia in mm Hg): '.$data['STDDEV(dia)'].'</p>'; 
@@ -224,7 +260,7 @@ if($_GET['page']=='statistics') {
     echo '<td>'.date("H:i - d.m.Y",strtotime($row_sys["timestamp"])).'</td>';
 	echo '</tr>';
     }    
-    echo '</tr></table>';
+    echo '</table>';
     
     echo '<p>Durchschnitt (Sys in mm Hg): '.$data['AVG(sys)'].'</p>';
     echo '<p>Standardabweichung (Sys in mm Hg): '.$data['STDDEV(sys)'].'</p>';
