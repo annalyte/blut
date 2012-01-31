@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.4';
-$build = '44fbbe';
+$version = '0.5';
+$build = '6ceb55';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -55,8 +55,8 @@ if(!$db_selected) {
         ]);
 
         var options = {
-          width: 500, height: 250,
-          title: 'Blutdruck'
+          width: 500, height: 300, fontName: 'Helvetica Neue', fontSize: 10, curveType: 'function',
+          title: 'Blutdruck - <?php echo $_GET['name']; ?>'
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
@@ -68,7 +68,8 @@ if(!$db_selected) {
 	body {
 		font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 		font-weight: lighter;
-		background: url(snow.png) repeat;
+		background: url(snow.png) repeat;q
+		font-color: #333;
 	}
 	
 	hr {
@@ -76,7 +77,9 @@ if(!$db_selected) {
 	}
 	
 	#wrap {
-		width:480px;
+		background: #fff;
+		padding: 20px;
+		width:500px;
 		margin-left: auto;
 		margin-right: auto;
 	}
@@ -92,11 +95,20 @@ if(!$db_selected) {
 		border: 1pt solid black;
 		text-align: center;
 		padding: 3px;
+		font-size: 10pt;
 	}
 	
 	td {
 		border: 1pt solid grey;
 		padding: 10px;
+	}
+	
+	div.important {
+		background: red;
+		font-weight: bold;
+		color: #fff;
+		margin: 15px;
+		padding: 15px;
 	}
 	
 	a:link { font-weight:bold; color:#000; text-decoration:underline; -webkit-transition: 2s linear; }
@@ -123,7 +135,7 @@ if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['pag
     echo 'Hallo. Zuletzt gemessen hat hier <b>'.$data['name'].'</b> am '.$data['timestamp'].'.';
     
 	echo '<h2>1. Sag mir wer du bist</h2>';
-	echo '<p>Sag mir wer du bist, damit ich alles richtig eintragen kann</p>';
+	echo '<p>Sag mir wer du bist, damit ich alles richtig eintragen kann.</p>';
 	echo '<form action="index.php" method="get">
 <select name="name">
   <option>Verena</option>
@@ -151,14 +163,14 @@ echo 'Hallo '.$_GET['name'].'!';
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
     
-    echo '<p>Du hast zuletzt am <b>'.$timestamp_data['timestamp'].'</b> gemessen! Das ist lange her.</p>';
-    echo '<p>Dein durchschnittlicher Blutdruck liegt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
+    echo '<p>Du hast zuletzt am <b>'.date("d.m.Y \u\m H:i",strtotime($timestamp_data["timestamp"])).'</b> gemessen. Das ist lange her.</p>';
+    echo '<p>Dein Blutdruck liegt im Durchschnitt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
     
     echo '<p><div id="chart_div"></div></p>'; 
     
     $history_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id DESC';
     $history_read = mysql_query($history_query) or die (mysql_error());
-    
+    /*
     echo '<table><tr><td>Dia</td><td>Sys</td><td>Zeit</td></tr>';
     while ($row = mysql_fetch_assoc($history_read)) {
     echo '<tr>';	
@@ -169,18 +181,19 @@ echo 'Hallo '.$_GET['name'].'!';
     }
     
     echo '</table>';
- 
-    
+ */
+	echo '<hr />'; 	
+ 	
     echo '<h2>3. Trage deine Messwerte hier ein</h2>';
 	echo '<p>Wie ist dein Blutdruck heute?</p>';	
-	echo '<form action="index.php" method="post">
+	echo '<div align="center"><form action="index.php" method="post">
 <input type="text" size="3" maxlenght="3" name="sys" /> Sys in mm Hg <br />
 <input type="text" size="3" maxlenght="3" name="dia" /> Dia in mm Hg <br />
 <input type="hidden" name="name" value="'.$_GET['name'].'" />
-	<p><strong>Hast du auch wirklich alles richtig eingegeben? Wenn ja, dann drücke auf <i>"weiter"</i>.</strong></p> <br />
+	<div class="important">Hast du auch wirklich alles richtig eingegeben?</div><p> Wenn ja, dann drücke auf <i>"weiter"</i>.</strong></p> <br />
 <input type="button" class="button" value="Zurück" onClick="history.back()">
 <input type="submit" value="Weiter" class="button" />
-</form>';
+</form></div>';
 }
 
 # Dritter Schritt: Fertig. Name und Blutdruck anzeigen.
@@ -271,9 +284,8 @@ if($_GET['page']=='statistics') {
 
 ?>
 <hr />
-<p><a href="?page=info">Hier</a> erfährst du mehr über deinen Blutdruck.</p>
 <p><a href="?page=statistics">Statistik</a></p>
-<p><?php echo $versioning; ?></p>
+<p><small><?php echo $versioning; ?></small</p>
 </div>
 </body>
 </html>
