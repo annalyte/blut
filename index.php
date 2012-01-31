@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.5';
-$build = '6ceb55';
+$version = '0.6';
+$build = '8ae9cf';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -25,7 +25,7 @@ if(!$db_selected) {
 <meta name="format-detection" content="telephone=no">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta name="apple-mobile-web-app-capable" content="yes" /> 
-<meta name="viewport" content="width = device-width, user-scalable=no">
+<meta name="viewport" content="width=device-width, user-scalable=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="apple-touch-icon" href="http://blut.aaronbauer.org/apple-touch-icon.png"/>
 <!-- Verhindert das Links unter iOS in Mobile Safari geöffnet werden -->
@@ -68,23 +68,27 @@ if(!$db_selected) {
 	body {
 		font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 		font-weight: lighter;
-		background: url(snow.png) repeat;q
+		background: url(whitey-2.png) repeat;q
 		font-color: #333;
 	}
 	
 	hr {
-		border: 1px dashed black;
+		border: 0.1em solid #333;
 	}
 	
 	#wrap {
 		background: #fff;
-		padding: 20px;
+		border: 1px solid #999;
+		padding: 5px 20px 5px 20px;
 		width:500px;
 		margin-left: auto;
+		margin-top: 25px;
+		margin-bottom: 25px;
 		margin-right: auto;
+		box-shadow: 5px 5px 1px #999;
 	}
 	input {
-		font-size: 35pt;
+		font-size: 40pt;
 	}
 	
 	.button {
@@ -111,6 +115,18 @@ if(!$db_selected) {
 		padding: 15px;
 	}
 	
+	h1 {
+		font-size: 28pt;
+	}
+	
+	h2 {
+		background: blue;
+		margin: 15px 0px 15px 0px;
+		padding: 5px 5px 5px 5px;
+		font-size: 12pt;
+		color:#fff;
+	}
+	
 	a:link { font-weight:bold; color:#000; text-decoration:underline; -webkit-transition: 2s linear; }
 a:visited { font-weight:bold; color:#000; text-decoration:none; }
 a:focus { font-weight:bold; color:#000; text-decoration:underline; }
@@ -132,7 +148,7 @@ if ($_GET['name']=='' and $_POST['dia']=='' and $_POST['sys']=='' and $_GET['pag
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
     
     
-    echo 'Hallo. Zuletzt gemessen hat hier <b>'.$data['name'].'</b> am '.$data['timestamp'].'.';
+    echo 'Hallo. Zuletzt gemessen hat hier <b>'.$data['name'].'</b> am '.date("d.m.Y \u\m H:i",strtotime($data["timestamp"])).'.';
     
 	echo '<h2>1. Sag mir wer du bist</h2>';
 	echo '<p>Sag mir wer du bist, damit ich alles richtig eintragen kann.</p>';
@@ -184,8 +200,8 @@ echo 'Hallo '.$_GET['name'].'!';
  */
 	echo '<hr />'; 	
  	
-    echo '<h2>3. Trage deine Messwerte hier ein</h2>';
-	echo '<p>Wie ist dein Blutdruck heute?</p>';	
+    echo '<h2>3. Sag mir deine Messwerte</h2>';
+	echo '<p>Wie ist dein Blutdruck heute? Trag die Zahlen bitte hier unten ein.</p>';	
 	echo '<div align="center"><form action="index.php" method="post">
 <input type="text" size="3" maxlenght="3" name="sys" /> Sys in mm Hg <br />
 <input type="text" size="3" maxlenght="3" name="dia" /> Dia in mm Hg <br />
@@ -284,8 +300,7 @@ if($_GET['page']=='statistics') {
 
 ?>
 <hr />
-<p><a href="?page=statistics">Statistik</a></p>
-<p><small><?php echo $versioning; ?></small</p>
+<p><small><a href="?page=statistics">Statistik</a> - <?php echo $versioning; ?></small></p>
 </div>
 </body>
 </html>
