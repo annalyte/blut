@@ -1,7 +1,7 @@
 <?php
 
-$version = '0.6';
-$build = '8ae9cf';
+$version = '0.8';
+$build = '3e5f1b';
 
 $versioning = 'Version: '.$version.' ('.$build.')';
 
@@ -32,7 +32,15 @@ if(!$db_selected) {
 <script>(function(a,b,c){if(c in b&&b[c]){var d,e=a.location,f=/^(a|html)$/i;a.addEventListener("click",function(a){d=a.target;while(!f.test(d.nodeName))d=d.parentNode;"href"in d&&(d.href.indexOf("http")||~d.href.indexOf(e.host))&&(a.preventDefault(),e.href=d.href)},!1)}})(document,window.navigator,"standalone")</script>
 <?php  
 	if ($_GET['name']!='') {
-	$graph_query = 'SELECT * FROM blut WHERE name="'.$_GET['name'].'" ORDER BY id ASC';
+	$graph_query = 'SELECT *
+						FROM 
+						   (
+							SELECT * 
+								FROM blut 
+								WHERE name="'.$_GET['name'].'" ORDER BY id DESC LIMIT 20
+							) 
+						AS tbl ORDER BY timestamp';
+						
 	$graph_result = mysql_query($graph_query) or die (mysql_error());
 	}
 ?>
@@ -46,9 +54,11 @@ if(!$db_selected) {
         data.addColumn('number', 'Dia in mm Hg');
         data.addColumn('number', 'Sys in mm Hg');
         data.addRows([
-        <?php if ($_GET['name']!='') {
+        <?php
+       if ($_GET['name']!='') {
         while ($graph = mysql_fetch_assoc($graph_result)) {
     echo '["'.$graph['timestamp'].'", '.$graph['dia'].', '.$graph['sys'].'],';	
+    	
     } 
     }?>
           
@@ -179,7 +189,13 @@ echo 'Hallo '.$_GET['name'].'!';
     $exec_read = mysql_query($read_query) or die(mysql_error());
     $data = mysql_fetch_array($exec_read) or die(mysql_error());
     
+    //Zählt die Anzahl der Messungen pro Person
+    $top_persons = 'SELECT COUNT(name) FROM blut WHERE name="'.$_GET['name'].'"';
+    $exec_top_persons =  mysql_query($top_persons) or die (mysql_error());
+    $top_persons_data = mysql_fetch_array($exec_top_persons) or die (mysql_error());
+    
     echo '<p>Du hast zuletzt am <b>'.date("d.m.Y \u\m H:i",strtotime($timestamp_data["timestamp"])).'</b> gemessen. Das ist lange her.</p>';
+    echo '<p>Insgesamt hast du hier schon '.$top_persons_data['COUNT(name)'].' mal gemessen.</p>';
     echo '<p>Dein Blutdruck liegt im Durchschnitt bei '.round($data['AVG(sys)']).'/'.round($data['AVG(dia)']).'.';
     
     echo '<p><div id="chart_div"></div></p>'; 
